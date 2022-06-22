@@ -1,0 +1,6 @@
+-r prod.txt
+pandas
+plotly-express
+scikit-learn
+matplotlib
+ipykernel
