@@ -16,3 +16,6 @@ Resolução do desafio técnico para vaga de cientista de dados na Bornlogic
 `pip install -r requirements/dev.txt`
 
 # Continuação
+
+Must install NetCDF-4.
+https://docs.geoserver.org/stable/en/user/extensions/netcdf-out/nc4.html
