@@ -1,101 +1,117 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import matplotlib.pyplot as plt
-import pymc3 as pymc
-
+from sklearn import preprocessing
+from sklearn import decomposition
+from sklearn.manifold import TSNE
+import streamlit as st
 
 PXChart = px._chart_types
 
 
-def numerical_description(numerical: pd.DataFrame) -> pd.DataFrame:
-    description = numerical.describe().T
-    description['range'] = description['max'] - description['min']
-    description['skew'] = numerical.skew()
-    description['kurtosis'] = numerical.kurtosis()
+class DSToolKit:
 
-    return description
+    def __init__(self) -> None:
+        self.reducer = TSNE(random_state=42, n_jobs=-1)
 
+    @st.cache(allow_output_mutation=True, suppress_st_warning=True)
+    def load_datasets(self):
+        data_metrics = pd.read_excel("data/Data_2021.xls")
+        data_historic = pd.read_excel("data/Historic_data.xls")
 
-def plot_histogram(data: pd.DataFrame, column: str) -> None:
-    fig = px.histogram(data, x=column)
-    fig = fig.update_layout(
-        title_text=f'{snake_to_text(column)} histogram',
-        xaxis_title_text='Value',
-        yaxis_title_text='Count')
-    fig.show()
+        data_historic = self.fill_na_historic(data_historic)
+        data_historic = self.create_regional_column(
+            data_historic, data_metrics)
+        data_historic = self.filter_historic(data_historic)
 
+        return data_metrics, data_historic
 
-def plot_xy(data: pd.DataFrame, x_axis: str, y_axis: str, plot_type: PXChart) -> None:
-    fig = plot_type(data, x=x_axis, y=y_axis)
-    fig = fig.update_layout(
-        title_text=f'{snake_to_text(y_axis)}',
-        xaxis_title_text=snake_to_text(x_axis),
-        yaxis_title_text='Value')
-    fig.show()
+    def rename_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        df.columns = [
+            name.lower().replace(" ", "_")
+            for name in df.columns]
 
+        return df
 
-def snake_to_text(string: str) -> str:
-    return string.capitalize().replace("_", " ")
+    def fill_na_historic(self, df: pd.DataFrame) -> pd.DataFrame:
+        for column in df.columns[1:]:
+            df[column].fillna(df[column].median(), inplace=True)
 
+        return df
 
-def get_region(data: pd.DataFrame, country: str) -> str:
-    try:
-        region = data[data["country_name"] ==
-                      country]["regional_indicator"].values[0]
-    except IndexError:
-        region = "NOT_DEFINED"
+    def get_region(self, df_metrics: pd.DataFrame, country: str) -> str:
+        try:
+            region = df_metrics[df_metrics["Country name"] == country][
+                "Regional indicator"].values[0]
 
-    return region
+        except IndexError:
+            region = "NOT_DEFINED"
 
+        return region
 
-def plot_comparison(trace: pymc.backends.base.MultiTrace, title: str, len_data: int) -> None:
-    plt.figure(figsize=(5, 5))
-    plt.suptitle(title)
+    def create_regional_column(self, df_historic: pd.DataFrame, df_metrics: pd.DataFrame) -> pd.DataFrame:
+        regional_column = list()
 
-    plt.subplot(311)
-    plt.hist(trace["lambda_1"], histtype="stepfilled", bins=30, density=True)
-    plt.xlim([0, 3])
+        for ii in range(len(df_historic)):
+            country = df_historic["Country name"][ii]
+            region = self.get_region(df_metrics, country)
 
-    plt.subplot(312)
-    plt.hist(trace["lambda_2"], histtype="stepfilled", bins=30, density=True)
-    plt.xlim([0, 3])
+            regional_column.append(region)
 
-    plt.subplot(313)
-    weights = 1.0 / len(trace['tau']) * np.ones_like(trace['tau'])
-    plt.hist(trace["tau"], histtype="stepfilled",
-             bins=len_data, weights=weights, rwidth=2.)
-    plt.xlim([0, len_data])
-    plt.ylim([0, 1.0])
+        df_historic["Regional indicator"] = regional_column
 
-    plt.show()
+        return df_historic
 
+    def filter_historic(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df[df["Regional indicator"] != "NOT_DEFINED"]
 
-def bayesian_inference(df_average: pd.DataFrame, region: str, variable: str) -> pymc.backends.base.MultiTrace:
-    df_regional = df_average[df_average["regional_indicator"] == region]
+    def data_preparation(self, df: pd.DataFrame) -> pd.DataFrame:
+        mm = preprocessing.MinMaxScaler()
 
-    response_variable = df_regional[variable].values.ravel()
-    len_data = len(response_variable)
-    with pymc.Model():
+        for variable in df.columns[1:-1]:  # Numerical columns
+            df[variable] = mm.fit_transform(df[[variable]])
 
-        # Prior
-        alpha = 1.0 / response_variable.mean()
-        lambda_1 = pymc.Exponential("lambda_1", alpha)
-        lambda_2 = pymc.Exponential("lambda_2", alpha)
+        df["regional_indicator"] = preprocessing.LabelEncoder().fit_transform(
+            df[["regional_indicator"]].values.ravel())
 
-        tau = pymc.DiscreteUniform("tau", lower=0, upper=len_data - 1)
+        return df
 
-        # Posterior
-        idx = np.arange(len_data)
-        lambda_ = pymc.math.switch(tau > idx, lambda_1, lambda_2)
-        _ = pymc.Poisson("obs", lambda_, observed=response_variable)
+    def run_pca(self, df_prep: pd.DataFrame) -> pd.DataFrame:
+        df_prep = self.data_preparation(df_prep.copy())
+        X = df_prep.drop(columns=['regional_indicator'], axis=1)
 
-        # Likelihood
-        trace = pymc.sample(
-            draws=10_000, tune=5_000, step=pymc.Metropolis(),
-            return_inferencedata=False)
+        pca = decomposition.PCA(n_components=X.shape[1])
+        principal_components = pca.fit_transform(X)
 
-        return trace, len_data
+        # pca component
+        return pd.DataFrame(principal_components)
+
+    def pca_embedding(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = self.rename_columns(df.copy())
+        df = df.drop(columns=["country_name"], axis=1)
+
+        df_pca = self.run_pca(df)
+        df_tsne = self.tsne_reduction(df_to_reduce=df_pca, df=df)
+
+        fig = px.scatter(
+            df_tsne, x='embedding_x', y='embedding_y',
+            color="regional_indicator", title="[METRICS] PCA Embedding Space"
+        )
+
+        return fig
+
+    def tsne_reduction(
+        self, df_to_reduce: pd.DataFrame, df: pd.DataFrame
+    ) -> pd.DataFrame:
+
+        embedding = self.reducer.fit_transform(df_to_reduce)
+
+        df_tsne = pd.DataFrame()
+        df_tsne["regional_indicator"] = df["regional_indicator"]
+        df_tsne['embedding_x'] = embedding[:, 0]
+        df_tsne['embedding_y'] = embedding[:, 1]
+
+        return df_tsne
 
 
 if __name__ == "__main__":
