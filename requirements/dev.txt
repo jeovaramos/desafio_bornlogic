@@ -1,6 +1,8 @@
 -r prod.txt
-pandas
-plotly-express
+pandas_profiling
 scikit-learn
 matplotlib
 ipykernel
+sklearn
+scipy
+pymc3

@@ -1,3 +1,6 @@
 numpy
 xlrd
 sklearn
+plotly-express
+pandas
+nbformat
