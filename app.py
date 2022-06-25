@@ -50,12 +50,7 @@ def pergunta_2(df_metrics, df_historic):
     col_forest.plotly_chart(fig_historic_pca, use_container_width=True)
 
 
-def main():
-    df_metrics, df_historic = toolkit.load_datasets()
-
-    pergunta_1(df_metrics, df_historic)
-    pergunta_2(df_metrics, df_historic)
-
+def pergunta_3(df_historic):
     st.subheader("Pergunta 3 - Impacto da pandemia")
 
     fig_positive, fig_negative = mapping.regional_average(df=df_historic)
@@ -72,6 +67,14 @@ def main():
     fig_anomaly = mapping.plot_anomaly(df_historic, n_years, std_thresh)
 
     st.plotly_chart(fig_anomaly, use_container_width=True)
+
+
+def main():
+    df_metrics, df_historic = toolkit.load_datasets()
+
+    pergunta_1(df_metrics, df_historic)
+    pergunta_2(df_metrics, df_historic)
+    pergunta_3(df_historic)
 
 
 if __name__ == "__main__":
