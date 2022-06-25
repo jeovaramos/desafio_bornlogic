@@ -94,7 +94,6 @@ class Mapping:
     ) -> dict:
 
         idx = -(n_years + 1)
-        print(idx)
 
         point_2020 = df_average[
             df_average["regional_indicator"]
