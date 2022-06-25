@@ -6,11 +6,15 @@ from plotly.graph_objs._figure import Figure
 from lib.toolkit import DSToolKit
 from typing import List
 
+
 class Mapping:
     def __init__(self):
         self.toolkit = DSToolKit()
 
-    def globe_figure(self, df: pd.DataFrame, variable: str = "Ladder score") -> Figure:
+    def globe_figure(
+        self, df: pd.DataFrame, variable: str = "Ladder score"
+    ) -> Figure:
+
         variable = "Ladder score" if variable is None else variable
         df_mean = df.groupby(
             ['Country name']).mean([variable]).reset_index()
@@ -101,12 +105,12 @@ class Mapping:
         mean_years = df_average[df_average[
             "regional_indicator"]
             == region][var].values[idx:-1].mean()
-        std_5years = df_average[
+        std_years = df_average[
             df_average["regional_indicator"]
             == region][var].values[idx:-1].std()
 
         anomaly = point_2020 - mean_years
-        impact = np.abs(anomaly) > std_thresh * std_5years
+        impact = np.abs(anomaly) > std_thresh * std_years
         relative_anomaly = (point_2020 / mean_years) - 1
 
         results = {
