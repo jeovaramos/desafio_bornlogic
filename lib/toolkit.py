@@ -1,9 +1,9 @@
-import numpy as np
 import pandas as pd
 import plotly.express as px
+from sklearn.manifold import TSNE
 from sklearn import preprocessing
 from sklearn import decomposition
-from sklearn.manifold import TSNE
+from sklearn import ensemble
 import streamlit as st
 
 PXChart = px._chart_types
@@ -25,6 +25,9 @@ class DSToolKit:
         data_historic = self.filter_historic(data_historic)
 
         return data_metrics, data_historic
+
+    def snake_to_text(self, string: str) -> str:
+        return string.capitalize().replace("_", " ")
 
     def rename_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         df.columns = [
@@ -49,9 +52,11 @@ class DSToolKit:
 
         return region
 
-    def create_regional_column(self, df_historic: pd.DataFrame, df_metrics: pd.DataFrame) -> pd.DataFrame:
-        regional_column = list()
+    def create_regional_column(
+        self, df_historic: pd.DataFrame, df_metrics: pd.DataFrame
+    ) -> pd.DataFrame:
 
+        regional_column = list()
         for ii in range(len(df_historic)):
             country = df_historic["Country name"][ii]
             region = self.get_region(df_metrics, country)
@@ -86,6 +91,19 @@ class DSToolKit:
         # pca component
         return pd.DataFrame(principal_components)
 
+    def run_forest(self, df_prep: pd.DataFrame) -> pd.DataFrame:
+        df_prep = self.data_preparation(df_prep.copy())
+        X = df_prep.drop(columns=['regional_indicator'], axis=1)
+        y = df_prep['regional_indicator']
+
+        rf_model = ensemble.RandomForestRegressor(
+            n_estimators=100, random_state=42)
+        rf_model.fit(X, y)
+
+        # leaf embedding space
+        return pd.DataFrame(rf_model.apply(X))
+
+    @st.cache(allow_output_mutation=True, suppress_st_warning=True)
     def pca_embedding(self, df: pd.DataFrame) -> pd.DataFrame:
         df = self.rename_columns(df.copy())
         df = df.drop(columns=["country_name"], axis=1)
@@ -112,6 +130,22 @@ class DSToolKit:
         df_tsne['embedding_y'] = embedding[:, 1]
 
         return df_tsne
+
+    @st.cache(allow_output_mutation=True, suppress_st_warning=True)
+    def forest_embedding(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = self.rename_columns(df.copy())
+        df = df.drop(columns=["country_name"], axis=1)
+
+        df_forest = self.run_forest(df)
+        df_tsne = self.tsne_reduction(df_to_reduce=df_forest, df=df)
+
+        fig = px.scatter(
+            df_tsne, x='embedding_x', y='embedding_y',
+            color="regional_indicator",
+            title="[HISTORIC] Random Forest Embedding Space"
+        )
+
+        return fig
 
 
 if __name__ == "__main__":
