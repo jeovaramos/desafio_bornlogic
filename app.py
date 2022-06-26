@@ -1,10 +1,6 @@
-from json import tool
-import pandas as pd
-import datetime as dt
 import streamlit as st
-import plotly.express as px
-from lib.toolkit import DSToolKit
 from lib.maps import Mapping
+from lib.toolkit import DSToolKit
 from lib.sections import Sections
 
 st.set_page_config(
@@ -19,14 +15,17 @@ mapping = Mapping()
 
 
 def pergunta_1(df_metrics, df_historic):
-    st.subheader("Pergunta 1 - Visualizações das métricas de desenvolvimento humano")
+    st.subheader(
+        "Pergunta 1 - Visualizações das métricas de desenvolvimento humano")
     column1, column2 = st.columns(2)
 
-    variable_globe = column1.selectbox("Variable", df_metrics.columns[2:])
+    variable_globe = column1.selectbox(
+        "Variable", df_metrics.columns[2:])
     globe_fig = mapping.globe_figure(df_metrics, variable_globe)
     column1.plotly_chart(globe_fig, use_container_width=True)
 
-    variable_mundi = column2.selectbox("Variable", df_historic.columns[2:-1], 7)
+    variable_mundi = column2.selectbox(
+        "Variable", df_historic.columns[2:-1], 7)
     mundi_fig = mapping.mundi_figure(df_historic, variable_mundi)
     column2.plotly_chart(mundi_fig, use_container_width=True)
 
