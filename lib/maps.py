@@ -18,6 +18,14 @@ class Mapping:
     ) -> Figure:
 
         variable = "Ladder score" if variable is None else variable
+        if variable == "Generosity":
+            color_scale = px.colors.diverging.BrBG
+            mid_point = 0
+
+        else:
+            color_scale = px.colors.sequential.Viridis
+            mid_point = None
+
         df_mean = df.groupby(["Country name"]).mean([variable]).reset_index()
 
         fig = px.choropleth(
@@ -26,8 +34,9 @@ class Mapping:
             locationmode="country names",
             color=variable,
             projection="orthographic",
-            color_continuous_scale=px.colors.sequential.Viridis,
-            title="Positive affect index",
+            color_continuous_scale=color_scale,
+            color_continuous_midpoint=mid_point,
+            title=f"{variable.capitalize()} index for 2021",
         )
 
         return fig
@@ -50,7 +59,6 @@ class Mapping:
             animation_frame="year",
             color_continuous_scale=color_scale,
             color_continuous_midpoint=mid_point,
-            # range_color=[0.4, 1],
             title=f"{variable.capitalize()} time evolution",
         )
 
