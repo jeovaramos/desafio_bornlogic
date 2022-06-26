@@ -103,12 +103,9 @@ class DSToolKit:
         return pd.DataFrame(rf_model.apply(X))
 
     @st.cache(allow_output_mutation=True, suppress_st_warning=True)
-    def pca_embedding(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = self.rename_columns(df.copy())
-        df = df.drop(columns=["country_name"], axis=1)
+    def plot_embedding(self, name: str) -> pd.DataFrame:
 
-        df_pca = self.run_pca(df)
-        df_tsne = self.tsne_reduction(df_to_reduce=df_pca, df=df)
+        df_tsne = pd.read_csv(f"data/{name}.csv")
 
         fig = px.scatter(
             df_tsne,
@@ -132,24 +129,6 @@ class DSToolKit:
         df_tsne["embedding_y"] = embedding[:, 1]
 
         return df_tsne
-
-    @st.cache(allow_output_mutation=True, suppress_st_warning=True)
-    def forest_embedding(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = self.rename_columns(df.copy())
-        df = df.drop(columns=["country_name"], axis=1)
-
-        df_forest = self.run_forest(df)
-        df_tsne = self.tsne_reduction(df_to_reduce=df_forest, df=df)
-
-        fig = px.scatter(
-            df_tsne,
-            x="embedding_x",
-            y="embedding_y",
-            color="regional_indicator",
-            title="[HISTORIC] Random Forest Embedding Space",
-        )
-
-        return fig
 
 
 if __name__ == "__main__":
