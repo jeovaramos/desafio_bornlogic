@@ -42,11 +42,12 @@ class Sections:
 
         col1_spacer1.markdown(
             "Oi, tudo bem? Este é o produto de dados, resultado da solução "
-            "do desafio. Aqui estou trazendo os principais resultados. "
+            "do desafio. Aqui estou trazendo somente a visualização dos "
+            "principais resultados. "
             "Não deixe de conferir o [relatório de resultados]"
             "(https://docs.google.com/document/d/1yYwSWtm4WC0OuR-4VREUkzJ"
             "p3iORV3rBGOyZmN1H_-8/edit?usp=sharing) para conferir as "
-            "motivações que levaram aos mesmos. "
+            "motivações e discussões dos mesmos. "
             "Confira também o [relatório de atividades](https://docs.google."
             "com/document/d/1-fdSSZdLONQsEqbWauxyfFhzOCtKa0i2Ru-Gi43Pzzc/edit"
             "?usp=sharing) e o [repositório](https://github.com/jeovaramos/"
