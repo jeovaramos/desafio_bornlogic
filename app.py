@@ -37,17 +37,17 @@ def pergunta_2(df_metrics, df_historic):
     col_pca, col_forest = st.columns(2)
 
     col_pca.subheader("Espaço de Embedding PCA")
-    fig_metrics_pca = toolkit.pca_embedding(df_metrics)
+    fig_metrics_pca = toolkit.plot_embedding("metrics_pca_tsne")
     col_pca.plotly_chart(fig_metrics_pca, use_container_width=True)
 
-    fig_historic_pca = toolkit.pca_embedding(df_historic)
+    fig_historic_pca = toolkit.plot_embedding("historic_pca_tsne")
     col_pca.plotly_chart(fig_historic_pca, use_container_width=True)
 
     col_forest.subheader("Espaço de Embedding PCA")
-    fig_metrics_pca = toolkit.forest_embedding(df_metrics)
+    fig_metrics_pca = toolkit.plot_embedding("metrics_forest_tsne")
     col_forest.plotly_chart(fig_metrics_pca, use_container_width=True)
 
-    fig_historic_pca = toolkit.forest_embedding(df_historic)
+    fig_historic_pca = toolkit.plot_embedding("historic_forest_tsne")
     col_forest.plotly_chart(fig_historic_pca, use_container_width=True)
 
 
