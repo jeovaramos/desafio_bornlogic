@@ -1,16 +1,13 @@
 import pandas as pd
 import plotly.express as px
-from sklearn.manifold import TSNE
-from sklearn import preprocessing
-from sklearn import decomposition
-from sklearn import ensemble
 import streamlit as st
+from sklearn import decomposition, ensemble, preprocessing
+from sklearn.manifold import TSNE
 
 PXChart = px._chart_types
 
 
 class DSToolKit:
-
     def __init__(self) -> None:
         self.reducer = TSNE(random_state=42, n_jobs=-1)
 
@@ -21,7 +18,8 @@ class DSToolKit:
 
         data_historic = self.fill_na_historic(data_historic)
         data_historic = self.create_regional_column(
-            data_historic, data_metrics)
+            data_historic, data_metrics
+        )
         data_historic = self.filter_historic(data_historic)
 
         return data_metrics, data_historic
@@ -30,9 +28,7 @@ class DSToolKit:
         return string.capitalize().replace("_", " ")
 
     def rename_columns(self, df: pd.DataFrame) -> pd.DataFrame:
-        df.columns = [
-            name.lower().replace(" ", "_")
-            for name in df.columns]
+        df.columns = [name.lower().replace(" ", "_") for name in df.columns]
 
         return df
 
@@ -45,7 +41,8 @@ class DSToolKit:
     def get_region(self, df_metrics: pd.DataFrame, country: str) -> str:
         try:
             region = df_metrics[df_metrics["Country name"] == country][
-                "Regional indicator"].values[0]
+                "Regional indicator"
+            ].values[0]
 
         except IndexError:
             region = "NOT_DEFINED"
@@ -77,13 +74,14 @@ class DSToolKit:
             df[variable] = mm.fit_transform(df[[variable]])
 
         df["regional_indicator"] = preprocessing.LabelEncoder().fit_transform(
-            df[["regional_indicator"]].values.ravel())
+            df[["regional_indicator"]].values.ravel()
+        )
 
         return df
 
     def run_pca(self, df_prep: pd.DataFrame) -> pd.DataFrame:
         df_prep = self.data_preparation(df_prep.copy())
-        X = df_prep.drop(columns=['regional_indicator'], axis=1)
+        X = df_prep.drop(columns=["regional_indicator"], axis=1)
 
         pca = decomposition.PCA(n_components=X.shape[1])
         principal_components = pca.fit_transform(X)
@@ -93,11 +91,12 @@ class DSToolKit:
 
     def run_forest(self, df_prep: pd.DataFrame) -> pd.DataFrame:
         df_prep = self.data_preparation(df_prep.copy())
-        X = df_prep.drop(columns=['regional_indicator'], axis=1)
-        y = df_prep['regional_indicator']
+        X = df_prep.drop(columns=["regional_indicator"], axis=1)
+        y = df_prep["regional_indicator"]
 
         rf_model = ensemble.RandomForestRegressor(
-            n_estimators=100, random_state=42)
+            n_estimators=100, random_state=42
+        )
         rf_model.fit(X, y)
 
         # leaf embedding space
@@ -112,8 +111,11 @@ class DSToolKit:
         df_tsne = self.tsne_reduction(df_to_reduce=df_pca, df=df)
 
         fig = px.scatter(
-            df_tsne, x='embedding_x', y='embedding_y',
-            color="regional_indicator", title="[METRICS] PCA Embedding Space"
+            df_tsne,
+            x="embedding_x",
+            y="embedding_y",
+            color="regional_indicator",
+            title="[METRICS] PCA Embedding Space",
         )
 
         return fig
@@ -126,8 +128,8 @@ class DSToolKit:
 
         df_tsne = pd.DataFrame()
         df_tsne["regional_indicator"] = df["regional_indicator"]
-        df_tsne['embedding_x'] = embedding[:, 0]
-        df_tsne['embedding_y'] = embedding[:, 1]
+        df_tsne["embedding_x"] = embedding[:, 0]
+        df_tsne["embedding_y"] = embedding[:, 1]
 
         return df_tsne
 
@@ -140,9 +142,11 @@ class DSToolKit:
         df_tsne = self.tsne_reduction(df_to_reduce=df_forest, df=df)
 
         fig = px.scatter(
-            df_tsne, x='embedding_x', y='embedding_y',
+            df_tsne,
+            x="embedding_x",
+            y="embedding_y",
             color="regional_indicator",
-            title="[HISTORIC] Random Forest Embedding Space"
+            title="[HISTORIC] Random Forest Embedding Space",
         )
 
         return fig

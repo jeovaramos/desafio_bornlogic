@@ -1,10 +1,12 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
-import streamlit as st
 import plotly.express as px
+import streamlit as st
 from plotly.graph_objs._figure import Figure
+
 from lib.toolkit import DSToolKit
-from typing import List
 
 
 class Mapping:
@@ -16,12 +18,14 @@ class Mapping:
     ) -> Figure:
 
         variable = "Ladder score" if variable is None else variable
-        df_mean = df.groupby(
-            ['Country name']).mean([variable]).reset_index()
+        df_mean = df.groupby(["Country name"]).mean([variable]).reset_index()
 
         fig = px.choropleth(
-            df_mean, locations='Country name', locationmode="country names",
-            color=variable, projection='orthographic',
+            df_mean,
+            locations="Country name",
+            locationmode="country names",
+            color=variable,
+            projection="orthographic",
             color_continuous_scale=px.colors.sequential.Viridis,
             title="Positive affect index",
         )
@@ -39,12 +43,15 @@ class Mapping:
             mid_point = None
 
         fig = px.choropleth(
-            df_sorted, locations='Country name', locationmode="country names",
-            color=variable, animation_frame='year',
+            df_sorted,
+            locations="Country name",
+            locationmode="country names",
+            color=variable,
+            animation_frame="year",
             color_continuous_scale=color_scale,
             color_continuous_midpoint=mid_point,
             # range_color=[0.4, 1],
-            title=f'{variable.capitalize()} time evolution'
+            title=f"{variable.capitalize()} time evolution",
         )
 
         return fig
@@ -52,9 +59,12 @@ class Mapping:
     @st.cache(allow_output_mutation=True)
     def get_df_average(self, df: pd.DataFrame) -> pd.DataFrame:
         df = self.toolkit.rename_columns(df=df.copy())
-        df_average = df.groupby(
-            ["year", "regional_indicator"]
-        ).median().sort_values("year").reset_index()
+        df_average = (
+            df.groupby(["year", "regional_indicator"])
+            .median()
+            .sort_values("year")
+            .reset_index()
+        )
 
         return df_average
 
@@ -71,51 +81,74 @@ class Mapping:
     def regional_figure(self, df_average: pd.DataFrame, var: str) -> Figure:
         var_pretty = self.toolkit.snake_to_text(var)
         fig = px.line(
-            df_average, x="year", y=var, markers=True,
+            df_average,
+            x="year",
+            y=var,
+            markers=True,
             facet_col="regional_indicator",
             facet_col_wrap=5,
-            title=f"Annual regional average of {var_pretty}")
+            title=f"Annual regional average of {var_pretty}",
+        )
 
         var_mean = df_average[var].mean()
         fig = fig.add_hline(
-            y=var_mean, line_dash="dot",
+            y=var_mean,
+            line_dash="dot",
             annotation_text="Global average",
-            annotation_position="bottom right")
+            annotation_position="bottom right",
+        )
 
         fig = fig.add_vrect(
-            x0=2019.5, x1=2020.5,
-            annotation_text="Pandemic", annotation_position="top left",
-            fillcolor="green", opacity=0.25, line_width=0)
+            x0=2019.5,
+            x1=2020.5,
+            annotation_text="Pandemic",
+            annotation_position="top left",
+            fillcolor="green",
+            opacity=0.25,
+            line_width=0,
+        )
 
         fig = fig.for_each_annotation(
-            lambda a: a.update(text=a.text.split("=")[-1]))
+            lambda a: a.update(text=a.text.split("=")[-1])
+        )
 
         return fig
 
     def get_anomaly_metrics(
-        self, df_average: pd.DataFrame, region: str, var: str,
-        n_years: int = 5, std_thresh: float = 2.0
+        self,
+        df_average: pd.DataFrame,
+        region: str,
+        var: str,
+        n_years: int = 5,
+        std_thresh: float = 2.0,
     ) -> dict:
 
         idx = -(n_years + 1)
 
-        point_2020 = df_average[
-            df_average["regional_indicator"]
-            == region][var].values[-1]
-        mean_years = df_average[df_average[
-            "regional_indicator"]
-            == region][var].values[idx:-1].mean()
-        std_years = df_average[
-            df_average["regional_indicator"]
-            == region][var].values[idx:-1].std()
+        point_2020 = df_average[df_average["regional_indicator"] == region][
+            var
+        ].values[-1]
+        mean_years = (
+            df_average[df_average["regional_indicator"] == region][var]
+            .values[idx:-1]
+            .mean()
+        )
+        std_years = (
+            df_average[df_average["regional_indicator"] == region][var]
+            .values[idx:-1]
+            .std()
+        )
 
         anomaly = point_2020 - mean_years
         impact = np.abs(anomaly) > std_thresh * std_years
         relative_anomaly = (point_2020 / mean_years) - 1
 
         results = {
-            "Region": region, "Variable": var, "Anomaly": anomaly,
-            "Relative Anomaly": relative_anomaly, "Impact": impact
+            "Region": region,
+            "Variable": var,
+            "Anomaly": anomaly,
+            "Relative Anomaly": relative_anomaly,
+            "Impact": impact,
         }
         return results
 
@@ -128,25 +161,31 @@ class Mapping:
         for region in df_average["regional_indicator"].unique():
             for var in ["positive_affect", "negative_affect"]:
                 results = self.get_anomaly_metrics(
-                    df_average, region, var, n_years, std_thresh)
+                    df_average, region, var, n_years, std_thresh
+                )
                 anomaly_data.append(results)
 
         return pd.DataFrame(anomaly_data).round(2)
 
     def plot_anomaly(
-        self, df: pd.DataFrame,
-        n_years: int = 5, std_thresh: float = 2.0
+        self, df: pd.DataFrame, n_years: int = 5, std_thresh: float = 2.0
     ) -> Figure:
 
         df_anomaly = self.anomaly_data_frame(df, n_years, std_thresh)
         fig = px.bar(
-            df_anomaly, x="Variable", y="Relative Anomaly", color="Impact",
+            df_anomaly,
+            x="Variable",
+            y="Relative Anomaly",
+            color="Impact",
             facet_col="Region",
-            facet_col_wrap=5, range_y=(-0.3, 0.3),
-            title=f"Last {n_years} years Relative Anomaly")
+            facet_col_wrap=5,
+            range_y=(-0.3, 0.3),
+            title=f"Last {n_years} years Relative Anomaly",
+        )
 
         fig = fig.for_each_annotation(
-            lambda a: a.update(text=a.text.split("=")[-1]))
+            lambda a: a.update(text=a.text.split("=")[-1])
+        )
 
         return fig
 
