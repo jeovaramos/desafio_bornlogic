@@ -1,0 +1,1 @@
+web: echo "Starting." && streamlit run app.py
