@@ -1,8 +1,8 @@
-# Desafio técnico Bornlogic
-## Posição: Cientista de dados
-Este repositório contem a resolução do desafio técnico para vaga de cientista de dados na Bornlogic.
+# World happiness analysis
+## Impacts of COVID19 on World happiness metrics
 
-O dashboard (`app.py`) é o produto de dados, resultado da solução do desafio. Nele estou trazendo somente a visualização dos principais resultados.
+
+O dashboard (`app.py`) é o produto de dados, resultado dessa análise. Nele estou trazendo somente a visualização dos principais resultados.
 
 Não deixe de conferir o [relatório de resultados](https://docs.google.com/document/d/1yYwSWtm4WC0OuR-4VREUkzJp3iORV3rBGOyZmN1H_-8/edit?usp=sharing) para conferir as motivações e discussões dos mesmos. Confira também o [relatório de atividades](https://docs.google.com/document/d/1-fdSSZdLONQsEqbWauxyfFhzOCtKa0i2Ru-Gi43Pzzc/edit?usp=sharing).
 
@@ -11,7 +11,7 @@ Aproveite para explorar também os commits e os PR deste repositório para verif
 # Preparação do ambiente:
 1. Clone o repositório
 
-`git clone https://github.com/jeovaramos/desafio_bornlogic.git`
+`git clone https://github.com/jeovaramos/world_happiness.git`
 
 2. Crie um ambiente virtual dentro do repositório baixado
 
