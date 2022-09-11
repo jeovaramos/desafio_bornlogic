@@ -17,7 +17,10 @@ class Sections:
     def header(self):
         _, col_header1, col_header2 = st.columns((0.4, 2.0, 2.0))
         with col_header1:
-            st.image("figures/bornlogic_logo.jpeg")
+            lottie_world = self.load_lottieurl(
+               "https://assets10.lottiefiles.com/packages/lf20_n7eytpy8.json"
+            )
+            st_lottie(lottie_world, speed=1, height=200)
 
         with col_header2:
             lottie_book = self.load_lottieurl(
@@ -30,7 +33,7 @@ class Sections:
     def hello_card():
         _, row0_1, _, row0_2, _ = st.columns((0.1, 2, 0.2, 1, 0.1))
 
-        row0_1.title("Desafio Bornlogic")
+        row0_1.title("World Happiness")
         with row0_2:
             st.write("")
 
@@ -41,8 +44,8 @@ class Sections:
         col1_spacer1, row1_1, row1_spacer2 = st.columns((3.0, 2.0, 2.5))
 
         col1_spacer1.markdown(
-            "Oi, tudo bem? Este é o produto de dados, resultado da solução "
-            "do desafio. Aqui estou trazendo somente a visualização dos "
+            "Oi, tudo bem? Este é o produto de dados, resultado de um "
+            "projeto pessoal. Aqui estou trazendo somente a visualização dos "
             "principais resultados. "
             "Não deixe de conferir o [relatório de resultados]"
             "(https://docs.google.com/document/d/1yYwSWtm4WC0OuR-4VREUkzJ"
@@ -51,7 +54,7 @@ class Sections:
             "Confira também o [relatório de atividades](https://docs.google."
             "com/document/d/1-fdSSZdLONQsEqbWauxyfFhzOCtKa0i2Ru-Gi43Pzzc/edit"
             "?usp=sharing) e o [repositório](https://github.com/jeovaramos/"
-            "desafio_bornlogic) do projeto para entender o processo de "
+            "world_happiness) do projeto para entender o processo de "
             "desenvolvimento."
         )
 
